@@ -24,6 +24,9 @@ type QorWorkerArgument struct {
 	worker.Schedule
 }
 
+const PUBLISH_KEY = "qor:publish.publish"
+const DISCARD_KEY = "qor:publish.discard"
+
 // SetWorker set publish's worker
 func (publish *Publish) SetWorker(w *worker.Worker) {
 	publish.WorkerScheduler = w
@@ -55,6 +58,7 @@ func (publish *Publish) registerWorkerJob() {
 		}})
 
 		w.RegisterJob(&worker.Job{
+			Key:        PUBLISH_KEY,
 			Name:       "Publish",
 			Group:      "Publish",
 			Permission: roles.Deny(roles.Read, roles.Anyone),
@@ -69,6 +73,7 @@ func (publish *Publish) registerWorkerJob() {
 		})
 
 		w.RegisterJob(&worker.Job{
+			Key:        DISCARD_KEY,
 			Name:       "Discard",
 			Group:      "Publish",
 			Permission: roles.Deny(roles.Read, roles.Anyone),

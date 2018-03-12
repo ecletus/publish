@@ -66,10 +66,10 @@ func (pc *publishController) Diff(context *admin.Context) {
 		res        = context.Admin.GetResource(params[0])
 	)
 
-	draft := res.NewStruct()
+	draft := res.NewStruct(context.Site)
 	pc.search(context.GetDB().Set(publishDraftMode, true), res, [][]string{params[1:]}).First(draft)
 
-	production := res.NewStruct()
+	production := res.NewStruct(context.Site)
 	pc.search(context.GetDB().Set(publishDraftMode, false), res, [][]string{params[1:]}).First(production)
 
 	results := map[string]interface{}{"Production": production, "Draft": draft, "Resource": res}
@@ -82,11 +82,11 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 
 	if scheduler := pc.Publish.WorkerScheduler; scheduler != nil {
 		jobResource := scheduler.JobResource
-		result := jobResource.NewStruct().(worker.QorJobInterface)
+		result := jobResource.NewStruct(context.Site).(worker.QorJobInterface)
 		if request.Form.Get("publish_type") == "discard" {
-			result.SetJob(scheduler.GetRegisteredJob("Discard"))
+			result.SetJob(scheduler.GetRegisteredJob(DISCARD_KEY))
 		} else {
-			result.SetJob(scheduler.GetRegisteredJob("Publish"))
+			result.SetJob(scheduler.GetRegisteredJob(PUBLISH_KEY))
 		}
 
 		workerArgument := &QorWorkerArgument{IDs: ids}
