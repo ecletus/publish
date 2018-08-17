@@ -6,21 +6,21 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/jinzhu/gorm"
-	"github.com/qor/qor/utils"
+	"github.com/moisespsena-go/aorm"
+	"github.com/aghape/aghape/utils"
 )
 
 type resolver struct {
 	Records      []interface{}
 	Events       []PublishEventInterface
 	Dependencies map[string]*dependency
-	DB           *gorm.DB
+	DB           *aorm.DB
 	publish      Publish
 }
 
 type dependency struct {
 	Type                reflect.Type
-	ManyToManyRelations []*gorm.Relationship
+	ManyToManyRelations []*aorm.Relationship
 	PrimaryValues       [][][]interface{}
 }
 
@@ -347,7 +347,7 @@ func (resolver *resolver) Discard() (err error) {
 	return err
 }
 
-func scopePrimaryKeys(scope *gorm.Scope, tableName string) string {
+func scopePrimaryKeys(scope *aorm.Scope, tableName string) string {
 	var primaryKeys []string
 	for _, field := range scope.PrimaryFields() {
 		key := fmt.Sprintf("%v.%v", scope.Quote(tableName), scope.Quote(field.DBName))
@@ -359,7 +359,7 @@ func scopePrimaryKeys(scope *gorm.Scope, tableName string) string {
 	return strings.Join(primaryKeys, "")
 }
 
-func toQueryCondition(scope *gorm.Scope, columns []string) string {
+func toQueryCondition(scope *aorm.Scope, columns []string) string {
 	var newColumns []string
 	for _, column := range columns {
 		newColumns = append(newColumns, scope.Quote(column))

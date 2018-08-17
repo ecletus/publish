@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/qor/admin"
-	"github.com/qor/qor"
-	"github.com/qor/qor/resource"
-	"github.com/qor/qor/utils"
-	"github.com/qor/roles"
-	"github.com/qor/worker"
+	"github.com/aghape/admin"
+	"github.com/aghape/aghape"
+	"github.com/aghape/aghape/resource"
+	"github.com/aghape/aghape/utils"
+	"github.com/aghape/roles"
+	"github.com/aghape/worker"
 )
 
 const (
@@ -35,13 +35,14 @@ func (pc *publishController) Preview(context *admin.Context) {
 	var drafts = []resource{}
 
 	draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
-	for _, res := range context.Admin.GetResources() {
+
+	context.Admin.WalkResources(func(res *admin.Resource) bool {
 		if visibleInterface, ok := res.Value.(visiblePublishResourceInterface); ok {
 			if !visibleInterface.VisiblePublishResource(context.Context) {
-				continue
+				return true
 			}
 		} else if res.Config.Invisible {
-			continue
+			return true
 		}
 
 		if res.HasPermission(PublishPermission, context.Context) {
@@ -55,7 +56,8 @@ func (pc *publishController) Preview(context *admin.Context) {
 				}
 			}
 		}
-	}
+		return true
+	})
 	context.Execute("publish_drafts", drafts)
 }
 
@@ -63,7 +65,7 @@ func (pc *publishController) Diff(context *admin.Context) {
 	var (
 		resourceID = context.Request.URL.Query().Get(":publish_unique_key")
 		params     = strings.Split(resourceID, "__") // name__primary_keys
-		res        = context.Admin.GetResource(params[0])
+		res        = context.Admin.GetResourceByID(params[0])
 	)
 
 	draft := res.NewStruct(context.Site)
@@ -95,7 +97,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 		}
 		result.SetSerializableArgumentValue(workerArgument)
 
-		jobResource.CallSave(result, context.Context)
+		jobResource.Save(result, context.Context)
 		scheduler.AddJob(result)
 
 		http.Redirect(context.Writer, context.Request, context.URLFor(jobResource), http.StatusFound)
@@ -115,10 +117,9 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 // ConfigureQorResourceBeforeInitialize configure qor resource when initialize qor admin
 func (publish *Publish) ConfigureQorResourceBeforeInitialize(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
-		res.GetAdmin().RegisterViewPath("github.com/qor/publish/views")
 		res.UseTheme("publish")
 
-		if event := res.GetAdmin().GetResource("PublishEvent"); event == nil {
+		if event := res.GetAdmin().GetResourceByID("PublishEvent"); event == nil {
 			eventResource := res.GetAdmin().AddResource(&PublishEvent{}, &admin.Config{Invisible: true})
 			eventResource.IndexAttrs("Name", "Description", "CreatedAt")
 		}
@@ -129,10 +130,9 @@ func (publish *Publish) ConfigureQorResourceBeforeInitialize(res resource.Resour
 func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		controller := publishController{publish}
-		router := res.GetAdmin().GetRouter()
-		router.Get(fmt.Sprintf("/%v/diff/:publish_unique_key", res.ToParam()), controller.Diff)
-		router.Get(res.ToParam(), controller.Preview)
-		router.Post(res.ToParam(), controller.PublishOrDiscard)
+		res.Router.Get("/diff/{publish_unique_key}", controller.Diff)
+		res.Router.Get("/", controller.Preview)
+		res.Router.Post("/", controller.PublishOrDiscard)
 
 		res.GetAdmin().RegisterFuncMap("publish_unique_key", func(res *admin.Resource, record interface{}, context *admin.Context) string {
 			var publishKeys = []string{res.ToParam()}

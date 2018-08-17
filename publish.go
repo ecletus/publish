@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/gorm"
-	"github.com/qor/admin"
-	"github.com/qor/qor"
-	"github.com/qor/qor/resource"
-	"github.com/qor/qor/utils"
-	"github.com/qor/worker"
+	"github.com/moisespsena-go/aorm"
+	"github.com/aghape/admin"
+	"github.com/aghape/aghape"
+	"github.com/aghape/aghape/resource"
+	"github.com/aghape/aghape/utils"
+	"github.com/aghape/worker"
 
 	"reflect"
 )
@@ -31,8 +31,8 @@ type publishInterface interface {
 
 // PublishEventInterface defined publish event itself's interface
 type PublishEventInterface interface {
-	Publish(*gorm.DB) error
-	Discard(*gorm.DB) error
+	Publish(*aorm.DB) error
+	Discard(*aorm.DB) error
 }
 
 // Status publish status, need to be embedded in your models to get the publish feature
@@ -64,15 +64,15 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 
 // Publish defined a publish struct
 type Publish struct {
-	DB              *gorm.DB
-	SearchHandler   func(db *gorm.DB, context *qor.Context) *gorm.DB
+	DB              *aorm.DB
+	SearchHandler   func(db *aorm.DB, context *qor.Context) *aorm.DB
 	WorkerScheduler *worker.Worker
 	logger          LoggerInterface
-	deleteCallback  func(*gorm.Scope)
+	deleteCallback  func(*aorm.Scope)
 }
 
 // IsDraftMode check if current db in draft mode
-func IsDraftMode(db *gorm.DB) bool {
+func IsDraftMode(db *aorm.DB) bool {
 	if draftMode, ok := db.Get(publishDraftMode); ok {
 		if isDraft, ok := draftMode.(bool); ok && isDraft {
 			return true
@@ -100,9 +100,9 @@ func IsPublishableModel(model interface{}) (ok bool) {
 var injectedJoinTableHandler = map[reflect.Type]bool{}
 
 // New initialize a publish instance
-func New(db *gorm.DB) *Publish {
-	tableHandler := gorm.DefaultTableNameHandler
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+func New(db *aorm.DB) *Publish {
+	tableHandler := aorm.DefaultTableNameHandler
+	aorm.DefaultTableNameHandler = func(db *aorm.DB, defaultTableName string) string {
 		tableName := tableHandler(db, defaultTableName)
 
 		if db != nil {
@@ -157,7 +157,7 @@ func New(db *gorm.DB) *Publish {
 	db.Callback().RowQuery().Before("gorm:row_query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 
-	searchHandler := func(db *gorm.DB, context *qor.Context) *gorm.DB {
+	searchHandler := func(db *aorm.DB, context *qor.Context) *aorm.DB {
 		return db.Unscoped()
 	}
 	return &Publish{SearchHandler: searchHandler, DB: db, deleteCallback: deleteCallback, logger: Logger}
@@ -182,12 +182,12 @@ func (pb *Publish) AutoMigrate(values ...interface{}) {
 }
 
 // ProductionDB get db in production mode
-func (pb Publish) ProductionDB() *gorm.DB {
+func (pb Publish) ProductionDB() *aorm.DB {
 	return pb.DB.Set(publishDraftMode, false)
 }
 
 // DraftDB get db in draft mode
-func (pb Publish) DraftDB() *gorm.DB {
+func (pb Publish) DraftDB() *aorm.DB {
 	return pb.DB.Set(publishDraftMode, true)
 }
 
@@ -215,7 +215,7 @@ func (pb Publish) Discard(records ...interface{}) {
 	pb.newResolver(records...).Discard()
 }
 
-func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids [][]string) *gorm.DB {
+func (pb Publish) search(db *aorm.DB, res *admin.Resource, ids [][]string) *aorm.DB {
 	var primaryKeys []string
 	var primaryValues [][][]interface{}
 	var scope = db.NewScope(res.Value)
@@ -236,7 +236,7 @@ func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids [][]string) *gorm
 	return pb.SearchHandler(db, nil).Where(sql, toQueryValues(primaryValues)...)
 }
 
-func (pb Publish) searchWithPublishIDs(db *gorm.DB, Admin *admin.Admin, publishIDs []string) (results []interface{}) {
+func (pb Publish) searchWithPublishIDs(db *aorm.DB, Admin *admin.Admin, publishIDs []string) (results []interface{}) {
 	var values = map[string][][]string{}
 
 	for _, publishID := range publishIDs {
@@ -247,7 +247,7 @@ func (pb Publish) searchWithPublishIDs(db *gorm.DB, Admin *admin.Admin, publishI
 	}
 
 	for name, value := range values {
-		res := Admin.GetResource(name)
+		res := Admin.GetResourceByID(name)
 		result := res.NewSlice()
 		if pb.search(db, res, value).Find(result).Error == nil {
 			resultValues := reflect.Indirect(reflect.ValueOf(result))

@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jinzhu/gorm"
-	"github.com/qor/qor"
+	"github.com/moisespsena-go/aorm"
+	"github.com/aghape/aghape"
 )
 
 // EventInterface defined methods needs for a publish event
 type EventInterface interface {
-	Publish(db *gorm.DB, event PublishEventInterface) error
-	Discard(db *gorm.DB, event PublishEventInterface) error
+	Publish(db *aorm.DB, event PublishEventInterface) error
+	Discard(db *aorm.DB, event PublishEventInterface) error
 }
 
 var events = map[string]EventInterface{}
@@ -23,7 +23,7 @@ func RegisterEvent(name string, event EventInterface) {
 
 // PublishEvent default publish event model
 type PublishEvent struct {
-	gorm.Model
+	aorm.Model
 	Name          string
 	Description   string
 	Argument      string `sql:"size:65532"`
@@ -31,7 +31,7 @@ type PublishEvent struct {
 	PublishedBy   string
 }
 
-func getCurrentUser(db *gorm.DB) (string, bool) {
+func getCurrentUser(db *aorm.DB) (string, bool) {
 	if user, hasUser := db.Get("qor:current_user"); hasUser {
 		var currentUser string
 		if primaryField := db.NewScope(user).PrimaryField(); primaryField != nil {
@@ -47,7 +47,7 @@ func getCurrentUser(db *gorm.DB) (string, bool) {
 }
 
 // Publish publish data
-func (publishEvent *PublishEvent) Publish(db *gorm.DB) error {
+func (publishEvent *PublishEvent) Publish(db *aorm.DB) error {
 	if event, ok := events[publishEvent.Name]; ok {
 		err := event.Publish(db, publishEvent)
 		if err == nil {
@@ -63,7 +63,7 @@ func (publishEvent *PublishEvent) Publish(db *gorm.DB) error {
 }
 
 // Discard discard data
-func (publishEvent *PublishEvent) Discard(db *gorm.DB) error {
+func (publishEvent *PublishEvent) Discard(db *aorm.DB) error {
 	if event, ok := events[publishEvent.Name]; ok {
 		err := event.Discard(db, publishEvent)
 		if err == nil {

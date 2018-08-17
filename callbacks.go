@@ -3,10 +3,10 @@ package publish
 import (
 	"fmt"
 
-	"github.com/jinzhu/gorm"
+	"github.com/moisespsena-go/aorm"
 )
 
-func isProductionModeAndNewScope(scope *gorm.Scope) (isProduction bool, clone *gorm.Scope) {
+func isProductionModeAndNewScope(scope *aorm.Scope) (isProduction bool, clone *aorm.Scope) {
 	if !IsDraftMode(scope.DB()) {
 		if _, ok := scope.InstanceGet("publish:supported_model"); ok {
 			table := OriginalTableName(scope.TableName())
@@ -18,8 +18,8 @@ func isProductionModeAndNewScope(scope *gorm.Scope) (isProduction bool, clone *g
 	return false, nil
 }
 
-func setTableAndPublishStatus(ensureDraftMode bool) func(*gorm.Scope) {
-	return func(scope *gorm.Scope) {
+func setTableAndPublishStatus(ensureDraftMode bool) func(*aorm.Scope) {
+	return func(scope *aorm.Scope) {
 		if scope.Value == nil {
 			return
 		}
@@ -50,7 +50,7 @@ func setTableAndPublishStatus(ensureDraftMode bool) func(*gorm.Scope) {
 	}
 }
 
-func syncCreateFromProductionToDraft(scope *gorm.Scope) {
+func syncCreateFromProductionToDraft(scope *aorm.Scope) {
 	if !scope.HasError() {
 		if ok, clone := isProductionModeAndNewScope(scope); ok {
 			scope.DB().Callback().Create().Get("gorm:create")(clone)
@@ -58,7 +58,7 @@ func syncCreateFromProductionToDraft(scope *gorm.Scope) {
 	}
 }
 
-func syncUpdateFromProductionToDraft(scope *gorm.Scope) {
+func syncUpdateFromProductionToDraft(scope *aorm.Scope) {
 	if !scope.HasError() {
 		if ok, clone := isProductionModeAndNewScope(scope); ok {
 			if updateAttrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
@@ -72,7 +72,7 @@ func syncUpdateFromProductionToDraft(scope *gorm.Scope) {
 	}
 }
 
-func syncDeleteFromProductionToDraft(scope *gorm.Scope) {
+func syncDeleteFromProductionToDraft(scope *aorm.Scope) {
 	if !scope.HasError() {
 		if ok, clone := isProductionModeAndNewScope(scope); ok {
 			scope.DB().Callback().Delete().Get("gorm:delete")(clone)
@@ -80,7 +80,7 @@ func syncDeleteFromProductionToDraft(scope *gorm.Scope) {
 	}
 }
 
-func deleteScope(scope *gorm.Scope) {
+func deleteScope(scope *aorm.Scope) {
 	if !scope.HasError() {
 		_, supportedModel := scope.InstanceGet("publish:supported_model")
 
@@ -88,7 +88,7 @@ func deleteScope(scope *gorm.Scope) {
 			scope.Raw(
 				fmt.Sprintf("UPDATE %v SET deleted_at=%v, publish_status=%v %v",
 					scope.QuotedTableName(),
-					scope.AddToVars(gorm.NowFunc()),
+					scope.AddToVars(aorm.NowFunc()),
 					scope.AddToVars(DIRTY),
 					scope.CombinedConditionSql(),
 				))
@@ -99,7 +99,7 @@ func deleteScope(scope *gorm.Scope) {
 	}
 }
 
-func createPublishEvent(scope *gorm.Scope) {
+func createPublishEvent(scope *aorm.Scope) {
 	if _, ok := scope.InstanceGet("publish:creating_publish_event"); ok {
 		if event, ok := scope.Get(publishEvent); ok {
 			if event, ok := event.(*PublishEvent); ok {

@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/jinzhu/gorm"
+	"github.com/moisespsena-go/aorm"
 )
 
 // LoggerInterface logger interface used to print publish logs
@@ -29,7 +29,7 @@ func stringify(object interface{}) string {
 		return obj.Stringify()
 	}
 
-	scope := gorm.Scope{Value: object}
+	scope := aorm.Scope{Value: object}
 	for _, column := range []string{"Description", "Name", "Title", "Code"} {
 		if field, ok := scope.FieldByName(column); ok {
 			return fmt.Sprintf("%v", field.Field.Interface())

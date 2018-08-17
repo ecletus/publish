@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/qor/admin"
-	"github.com/qor/qor"
-	"github.com/qor/roles"
-	"github.com/qor/worker"
+	"github.com/aghape/admin"
+	"github.com/aghape/aghape"
+	"github.com/aghape/roles"
+	"github.com/aghape/worker"
 )
 
 type workerJobLogger struct {
@@ -48,7 +48,7 @@ func (publish *Publish) registerWorkerJob() {
 				for _, id := range workerArgument.IDs {
 					if keys := strings.Split(id, "__"); len(keys) >= 2 {
 						name, id := keys[0], keys[1:]
-						recordRes := w.Admin.GetResource(name)
+						recordRes := w.Admin.GetResourceByID(name)
 						values[recordRes] = append(values[recordRes], id)
 					}
 				}

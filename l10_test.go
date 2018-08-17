@@ -3,13 +3,13 @@ package publish_test
 import (
 	"testing"
 
-	"github.com/jinzhu/gorm"
-	"github.com/qor/l10n"
-	"github.com/qor/publish"
+	"github.com/moisespsena-go/aorm"
+	"github.com/aghape/l10n"
+	"github.com/aghape/publish"
 )
 
 type Book struct {
-	gorm.Model
+	aorm.Model
 	l10n.Locale
 	publish.Status
 	Name        string
@@ -22,13 +22,13 @@ type Book struct {
 }
 
 type Publisher struct {
-	gorm.Model
+	aorm.Model
 	publish.Status
 	Name string
 }
 
 type Comment struct {
-	gorm.Model
+	aorm.Model
 	l10n.Locale
 	publish.Status
 	Content string
@@ -36,7 +36,7 @@ type Comment struct {
 }
 
 type Author struct {
-	gorm.Model
+	aorm.Model
 	l10n.Locale
 	Name string
 }

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jinzhu/gorm"
-	"github.com/qor/publish"
+	"github.com/moisespsena-go/aorm"
+	"github.com/aghape/publish"
 )
 
 type createResourcePublishInterface struct {
 }
 
-func (createResourcePublishInterface) Publish(db *gorm.DB, event publish.PublishEventInterface) error {
+func (createResourcePublishInterface) Publish(db *aorm.DB, event publish.PublishEventInterface) error {
 	if event, ok := event.(*publish.PublishEvent); ok {
 		var product Product
 		db.Set("publish:draft_mode", true).First(&product, event.Argument)
@@ -20,7 +20,7 @@ func (createResourcePublishInterface) Publish(db *gorm.DB, event publish.Publish
 	return nil
 }
 
-func (createResourcePublishInterface) Discard(db *gorm.DB, event publish.PublishEventInterface) error {
+func (createResourcePublishInterface) Discard(db *aorm.DB, event publish.PublishEventInterface) error {
 	if event, ok := event.(*publish.PublishEvent); ok {
 		var product Product
 		db.Set("publish:draft_mode", true).First(&product, event.Argument)
@@ -32,11 +32,11 @@ func (createResourcePublishInterface) Discard(db *gorm.DB, event publish.Publish
 type publishAllResourcesInterface struct {
 }
 
-func (publishAllResourcesInterface) Publish(db *gorm.DB, event publish.PublishEventInterface) error {
+func (publishAllResourcesInterface) Publish(db *aorm.DB, event publish.PublishEventInterface) error {
 	return nil
 }
 
-func (publishAllResourcesInterface) Discard(db *gorm.DB, event publish.PublishEventInterface) error {
+func (publishAllResourcesInterface) Discard(db *aorm.DB, event publish.PublishEventInterface) error {
 	return nil
 }
 

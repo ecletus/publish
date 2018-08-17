@@ -3,17 +3,17 @@ package publish_test
 import (
 	"fmt"
 
-	"github.com/jinzhu/gorm"
+	"github.com/moisespsena-go/aorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/qor/l10n"
-	"github.com/qor/publish"
-	"github.com/qor/qor/test/utils"
+	"github.com/aghape/l10n"
+	"github.com/aghape/publish"
+	"github.com/aghape/aghape/test/utils"
 )
 
 var pb *publish.Publish
-var pbdraft *gorm.DB
-var pbprod *gorm.DB
-var db *gorm.DB
+var pbdraft *aorm.DB
+var pbprod *aorm.DB
+var db *aorm.DB
 
 func init() {
 	db = utils.TestDB()
@@ -37,7 +37,7 @@ func init() {
 }
 
 type Product struct {
-	gorm.Model
+	aorm.Model
 	Name       string
 	Quantity   uint
 	Color      Color
@@ -48,17 +48,17 @@ type Product struct {
 }
 
 type Color struct {
-	gorm.Model
+	aorm.Model
 	Name string
 }
 
 type Language struct {
-	gorm.Model
+	aorm.Model
 	Name string
 }
 
 type Category struct {
-	gorm.Model
+	aorm.Model
 	Name string
 	publish.Status
 }
