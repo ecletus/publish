@@ -6,9 +6,9 @@ import (
 
 	"github.com/moisespsena-go/aorm"
 	"github.com/aghape/admin"
-	"github.com/aghape/aghape"
-	"github.com/aghape/aghape/resource"
-	"github.com/aghape/aghape/utils"
+	"github.com/aghape/core"
+	"github.com/aghape/core/resource"
+	"github.com/aghape/core/utils"
 	"github.com/aghape/worker"
 
 	"reflect"
@@ -65,7 +65,7 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 // Publish defined a publish struct
 type Publish struct {
 	DB              *aorm.DB
-	SearchHandler   func(db *aorm.DB, context *qor.Context) *aorm.DB
+	SearchHandler   func(db *aorm.DB, context *core.Context) *aorm.DB
 	WorkerScheduler *worker.Worker
 	logger          LoggerInterface
 	deleteCallback  func(*aorm.Scope)
@@ -157,7 +157,7 @@ func New(db *aorm.DB) *Publish {
 	db.Callback().RowQuery().Before("gorm:row_query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 
-	searchHandler := func(db *aorm.DB, context *qor.Context) *aorm.DB {
+	searchHandler := func(db *aorm.DB, context *core.Context) *aorm.DB {
 		return db.Unscoped()
 	}
 	return &Publish{SearchHandler: searchHandler, DB: db, deleteCallback: deleteCallback, logger: Logger}

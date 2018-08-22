@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/aghape/admin"
-	"github.com/aghape/aghape"
-	"github.com/aghape/aghape/resource"
-	"github.com/aghape/aghape/utils"
+	"github.com/aghape/core"
+	"github.com/aghape/core/resource"
+	"github.com/aghape/core/utils"
 	"github.com/aghape/roles"
 	"github.com/aghape/worker"
 )
@@ -23,7 +23,7 @@ type publishController struct {
 }
 
 type visiblePublishResourceInterface interface {
-	VisiblePublishResource(*qor.Context) bool
+	VisiblePublishResource(*core.Context) bool
 }
 
 func (pc *publishController) Preview(context *admin.Context) {

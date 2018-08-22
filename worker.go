@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/aghape/admin"
-	"github.com/aghape/aghape"
+	"github.com/aghape/core"
 	"github.com/aghape/roles"
 	"github.com/aghape/worker"
 )
@@ -41,7 +41,7 @@ func (publish *Publish) registerWorkerJob() {
 		}
 
 		qorWorkerArgumentResource := w.Admin.NewResource(&QorWorkerArgument{})
-		qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "publish_job_argument", Valuer: func(record interface{}, context *qor.Context) interface{} {
+		qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "publish_job_argument", Valuer: func(record interface{}, context *core.Context) interface{} {
 			var values = map[*admin.Resource][][]string{}
 
 			if workerArgument, ok := record.(*QorWorkerArgument); ok {

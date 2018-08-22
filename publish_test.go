@@ -7,7 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/aghape/l10n"
 	"github.com/aghape/publish"
-	"github.com/aghape/aghape/test/utils"
+	"github.com/aghape/core/test/utils"
 )
 
 var pb *publish.Publish

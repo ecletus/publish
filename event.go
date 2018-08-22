@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/moisespsena-go/aorm"
-	"github.com/aghape/aghape"
+	"github.com/aghape/core"
 )
 
 // EventInterface defined methods needs for a publish event
@@ -79,6 +79,6 @@ func (publishEvent *PublishEvent) Discard(db *aorm.DB) error {
 }
 
 // VisiblePublishResource force to display publish event in publish drafts even it is hidden in the menus
-func (PublishEvent) VisiblePublishResource(*qor.Context) bool {
+func (PublishEvent) VisiblePublishResource(*core.Context) bool {
 	return true
 }
