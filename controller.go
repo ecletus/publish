@@ -97,7 +97,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 		}
 		result.SetSerializableArgumentValue(workerArgument)
 
-		jobResource.Save(result, context.Context)
+		jobResource.Crud(context.Context).Create(result)
 		scheduler.AddJob(result)
 
 		http.Redirect(context.Writer, context.Request, context.URLFor(jobResource), http.StatusFound)
