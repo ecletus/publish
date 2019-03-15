@@ -45,7 +45,7 @@ func (pc *publishController) Preview(context *admin.Context) {
 			return true
 		}
 
-		if res.HasPermission(PublishPermission, context.Context) {
+		if core.HasPermission(res, PublishPermission, context.Context) {
 			results := res.NewSlice()
 			if IsPublishableModel(res.Value) || IsPublishEvent(res.Value) {
 				if pc.SearchHandler(draftDB.Where("publish_status = ?", DIRTY), context.Context).Find(results).RowsAffected > 0 {
