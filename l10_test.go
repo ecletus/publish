@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/moisespsena-go/aorm"
-	"github.com/aghape/l10n"
-	"github.com/aghape/publish"
+	"github.com/ecletus/l10n"
+	"github.com/ecletus/publish"
 )
 
 type Book struct {

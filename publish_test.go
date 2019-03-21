@@ -5,9 +5,9 @@ import (
 
 	"github.com/moisespsena-go/aorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/aghape/l10n"
-	"github.com/aghape/publish"
-	"github.com/aghape/core/test/utils"
+	"github.com/ecletus/l10n"
+	"github.com/ecletus/publish"
+	"github.com/ecletus/core/test/utils"
 )
 
 var pb *publish.Publish

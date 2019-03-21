@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/moisespsena-go/aorm"
-	"github.com/aghape/core"
+	"github.com/ecletus/core"
 )
 
 // EventInterface defined methods needs for a publish event

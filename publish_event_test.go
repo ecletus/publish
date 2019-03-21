@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/moisespsena-go/aorm"
-	"github.com/aghape/publish"
+	"github.com/ecletus/publish"
 )
 
 type createResourcePublishInterface struct {
