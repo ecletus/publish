@@ -8,9 +8,9 @@ type publishJoinTableHandler struct {
 
 func (handler publishJoinTableHandler) Table(db *aorm.DB) string {
 	if IsDraftMode(db) {
-		return handler.TableName + "_draft"
+		return handler.TableName(db.IsSingularTable()) + "_draft"
 	}
-	return handler.TableName
+	return handler.TableName(db.IsSingularTable())
 }
 
 func (handler publishJoinTableHandler) Add(h aorm.JoinTableHandlerInterface, db *aorm.DB, source1 interface{}, source2 interface{}) error {

@@ -34,7 +34,7 @@ func (pc *publishController) Preview(context *admin.Context) {
 
 	var drafts = []resource{}
 
-	draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
+	draftDB := context.DB().Set(publishDraftMode, true).Unscoped()
 
 	context.Admin.WalkResources(func(res *admin.Resource) bool {
 		if visibleInterface, ok := res.Value.(visiblePublishResourceInterface); ok {
@@ -45,7 +45,7 @@ func (pc *publishController) Preview(context *admin.Context) {
 			return true
 		}
 
-		if core.HasPermission(res, PublishPermission, context.Context) {
+		if context.HasPermission(res, PublishPermission) {
 			results := res.NewSlice()
 			if IsPublishableModel(res.Value) || IsPublishEvent(res.Value) {
 				if pc.SearchHandler(draftDB.Where("publish_status = ?", DIRTY), context.Context).Find(results).RowsAffected > 0 {
@@ -69,13 +69,16 @@ func (pc *publishController) Diff(context *admin.Context) {
 	)
 
 	draft := res.NewStruct(context.Site)
-	pc.search(context.GetDB().Set(publishDraftMode, true), res, [][]string{params[1:]}).First(draft)
+	pc.search(context.DB().Set(publishDraftMode, true), res, [][]string{params[1:]}).First(draft)
 
 	production := res.NewStruct(context.Site)
-	pc.search(context.GetDB().Set(publishDraftMode, false), res, [][]string{params[1:]}).First(production)
+	pc.search(context.DB().Set(publishDraftMode, false), res, [][]string{params[1:]}).First(production)
 
-	results := map[string]interface{}{"Production": production, "Draft": draft, "Resource": res}
-	fmt.Fprintf(context.Writer, string(context.Render("publish_diff", results)))
+	context.Include(context.Writer, "publish_diff", map[string]interface{}{
+		"Production": production,
+		"Draft":      draft,
+		"Resource":   res,
+	})
 }
 
 func (pc *publishController) PublishOrDiscard(context *admin.Context) {
@@ -102,7 +105,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 
 		http.Redirect(context.Writer, context.Request, context.URLFor(jobResource), http.StatusFound)
 	} else {
-		records := pc.searchWithPublishIDs(context.GetDB().Set(publishDraftMode, true), context.Admin, ids)
+		records := pc.searchWithPublishIDs(context.DB().Set(publishDraftMode, true), context.Admin, ids)
 
 		if request.Form.Get("publish_type") == "publish" {
 			pc.Publish.Publish(records...)
@@ -115,7 +118,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 }
 
 // ConfigureQorResourceBeforeInitialize configure qor resource when initialize qor admin
-func (publish *Publish) ConfigureQorResourceBeforeInitialize(res resource.Resourcer) {
+func (publish *Publish) ConfigureResourceBeforeInitialize(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		res.UseTheme("publish")
 
@@ -127,7 +130,7 @@ func (publish *Publish) ConfigureQorResourceBeforeInitialize(res resource.Resour
 }
 
 // ConfigureQorResource configure qor resource for qor admin
-func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
+func (publish *Publish) ConfigureResource(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		controller := publishController{publish}
 		res.Router.Get("/diff/{publish_unique_key}", controller.Diff)

@@ -29,18 +29,16 @@ func stringify(object interface{}) string {
 		return obj.Stringify()
 	}
 
-	scope := aorm.Scope{Value: object}
-	for _, column := range []string{"Description", "Name", "Title", "Code"} {
-		if field, ok := scope.FieldByName(column); ok {
-			return fmt.Sprintf("%v", field.Field.Interface())
-		}
+	ms := aorm.StructOf(object)
+	if field := ms.FirstFieldValue(object, "Description", "Name", "Title", "Code"); field != nil {
+		return fmt.Sprintf("%v", field.Field.Interface())
 	}
 
-	if scope.PrimaryField() != nil {
-		if scope.PrimaryKeyZero() {
+	if id := ms.GetID(object); id != nil {
+		if id.IsZero() {
 			return ""
 		}
-		return fmt.Sprintf("%v#%v", scope.GetModelStruct().ModelType.Name(), scope.PrimaryKeyValue())
+		return fmt.Sprintf("%v#%s", ms.Type.Name(), id)
 	}
 
 	return fmt.Sprint(reflect.Indirect(reflect.ValueOf(object)).Interface())

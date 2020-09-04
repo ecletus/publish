@@ -60,7 +60,7 @@ func (resolver *resolver) GetDependencies(dep *dependency, primaryKeys [][][]int
 	fromScope := resolver.DB.NewScope(value.Interface())
 
 	draftDB := resolver.DB.Set(publishDraftMode, true).Unscoped()
-	for _, field := range fromScope.Fields() {
+	for _, field := range fromScope.Instance().Fields {
 		if relationship := field.Relationship; relationship != nil {
 			if IsPublishableModel(field.Field.Interface()) {
 				toType := utils.ModelType(field.Field.Interface())
@@ -166,7 +166,7 @@ func (resolver *resolver) Publish() (err error) {
 		draftPrimaryKey := scopePrimaryKeys(productionScope, draftTable)
 
 		var columns []string
-		for _, field := range productionScope.Fields() {
+		for _, field := range productionScope.Instance().Fields {
 			if field.IsNormal {
 				columns = append(columns, field.DBName)
 			}
@@ -180,7 +180,7 @@ func (resolver *resolver) Publish() (err error) {
 
 		if len(dep.PrimaryValues) > 0 {
 			queryValues := toQueryValues(dep.PrimaryValues)
-			resolver.publish.logger.Print(fmt.Sprintf("Publishing %v: ", productionScope.GetModelStruct().ModelType.Name()), stringifyPrimaryValues(dep.PrimaryValues))
+			resolver.publish.logger.Print(fmt.Sprintf("Publishing %v: ", productionScope.Struct().Type.Name()), stringifyPrimaryValues(dep.PrimaryValues))
 
 			// set status to published
 			updateStateSQL := fmt.Sprintf("UPDATE %v SET publish_status = ? WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
@@ -271,7 +271,7 @@ func (resolver *resolver) Discard() (err error) {
 		draftPrimaryKey := scopePrimaryKeys(productionScope, draftTable)
 
 		var columns []string
-		for _, field := range productionScope.Fields() {
+		for _, field := range productionScope.Instance().Fields {
 			if field.IsNormal {
 				columns = append(columns, field.DBName)
 			}
@@ -284,7 +284,7 @@ func (resolver *resolver) Discard() (err error) {
 		}
 
 		if len(dep.PrimaryValues) > 0 {
-			resolver.publish.logger.Print(fmt.Sprintf("Discarding %v: ", productionScope.GetModelStruct().ModelType.Name()), stringifyPrimaryValues(dep.PrimaryValues))
+			resolver.publish.logger.Print(fmt.Sprintf("Discarding %v: ", productionScope.Struct().Type.Name()), stringifyPrimaryValues(dep.PrimaryValues))
 
 			// delete data from draft db
 			deleteSQL := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))

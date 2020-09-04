@@ -1,15 +1,16 @@
 package publish
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/moisespsena-go/aorm"
 	"github.com/ecletus/admin"
 	"github.com/ecletus/core"
 	"github.com/ecletus/core/resource"
 	"github.com/ecletus/core/utils"
 	"github.com/ecletus/worker"
+	"github.com/moisespsena-go/aorm"
 
 	"reflect"
 )
@@ -41,7 +42,7 @@ type Status struct {
 }
 
 // GetPublishStatus get publish status
-func (s Status) GetPublishStatus() bool {
+func (s *Status) GetPublishStatus() bool {
 	return s.PublishStatus
 }
 
@@ -51,7 +52,7 @@ func (s *Status) SetPublishStatus(status bool) {
 }
 
 // ConfigureQorResource configure qor resource for qor admin
-func (s Status) ConfigureQorResource(res resource.Resourcer) {
+func (s *Status) ConfigureResource(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		if res.GetMeta("PublishStatus") == nil {
 			res.IndexAttrs(res.IndexAttrs(), "-PublishStatus")
@@ -102,20 +103,19 @@ var injectedJoinTableHandler = map[reflect.Type]bool{}
 // New initialize a publish instance
 func New(db *aorm.DB) *Publish {
 	tableHandler := aorm.DefaultTableNameHandler
-	aorm.DefaultTableNameHandler = func(db *aorm.DB, defaultTableName string) string {
-		tableName := tableHandler(db, defaultTableName)
+	aorm.DefaultTableNameHandler = func(ctx context.Context, singular bool, modelStruct *aorm.ModelStruct) (tableName string) {
+		tableName = tableHandler(ctx, singular, modelStruct)
 
-		if db != nil {
-			if IsPublishableModel(db.Value) {
+		if modelStruct != nil {
+			if IsPublishableModel(modelStruct.Value) {
 				// Set join table handler
-				typ := utils.ModelType(db.Value)
+				typ := modelStruct.Type
 				if !injectedJoinTableHandler[typ] {
 					injectedJoinTableHandler[typ] = true
-					scope := db.NewScope(db.Value)
-					for _, field := range scope.GetModelStruct().StructFields {
-						if many2many := utils.ParseTagOption(field.Tag.Get("gorm"))["MANY2MANY"]; many2many != "" {
-							db.SetJoinTableHandler(db.Value, field.Name, &publishJoinTableHandler{})
-							db.AutoMigrate(db.Value)
+					for _, field := range modelStruct.Fields {
+						if many2many := utils.ParseTagOption(field.Tag.Get("aorm"))["MANY2MANY"]; many2many != "" {
+							db.SetJoinTableHandler(db.Val, field.Name, &publishJoinTableHandler{})
+							db.AutoMigrate(modelStruct.Value)
 						}
 					}
 				}
